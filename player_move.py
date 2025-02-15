@@ -22,8 +22,8 @@ pygame.display.set_caption('Космическая игра с астероид�
 
 # Загрузка спрайтов
 
-fog_image = pygame.image.load("bg_98_98_fog.png").convert_alpha() # Добавить нормальное изображение тумана
-stars_image = pygame.image.load("stars.png").convert_alpha() # Добавить нормальное изображение звезд
+fog_image = pygame.image.load("bg_98_98_fog.png").convert_alpha()  # Добавить нормальное изображение тумана
+stars_image = pygame.image.load("stars.png").convert_alpha()  # Добавить нормальное изображение звезд
 
 sprite_folder = "class_ships_4/"
 idle_sprite = pygame.image.load(sprite_folder + "trport_mod01_s64_anim00.png").convert_alpha()
@@ -73,6 +73,7 @@ class Asteroid:
         rotated_rect = rotated_sprite.get_rect(center=(self.x - camera.left, self.y - camera.top))
         screen.blit(rotated_sprite, rotated_rect.topleft)
 
+
 # Класс для создания пояса астероидов
 class AsteroidBelt:
     def __init__(self, center_x, center_y, inner_radius, outer_radius, asteroid_counts):
@@ -118,6 +119,7 @@ class AsteroidBelt:
 
             screen.blit(rotated_sprite, rotated_rect.topleft)
 
+
 class AsteroidField:
     def __init__(self):
         self.asteroids = []
@@ -138,6 +140,7 @@ class AsteroidField:
         for asteroid in self.asteroids:
             asteroid.update()
             asteroid.draw(screen, camera)
+
 
 # Сетка комнат
 rooms = {}
@@ -167,6 +170,7 @@ asteroid_belt = AsteroidBelt(belt_center_x, belt_center_y, belt_inner_radius, be
 
 current_room = (100, 100)  # Начальная комната
 
+
 # Функция для перемещения корабля
 def move_ship(keys):
     global velocity, ship_angle
@@ -181,6 +185,7 @@ def move_ship(keys):
         ship_angle -= 5
 
     velocity *= 0.98
+
 
 # Функция для обновления позиции и перехода между комнатами
 def update_position():
@@ -203,11 +208,13 @@ def update_position():
         current_room = (current_room[0], current_room[1] + 1)
         ship_y = 0
 
+
 # Функция для обновления камеры
 def update_camera():
     camera.center = (ship_x, ship_y)
     camera.left = max(0, min(ROOM_WIDTH - CAMERA_WIDTH, camera.left))
     camera.top = max(0, min(ROOM_HEIGHT - CAMERA_HEIGHT, camera.top))
+
 
 # Функция для отрисовки корабля с анимацией
 def draw_ship():
@@ -226,8 +233,11 @@ def draw_ship():
     rotated_rect = rotated_ship.get_rect(center=(ship_x - camera.left, ship_y - camera.top))
 
     screen.blit(rotated_ship, rotated_rect.topleft)
+
+
 fog_scroll_speed = 0.6  # Туман двигается в 0.6 раза медленнее камеры
-star_scroll_speed = 0.2 # Звезды двигаются в 0.1 раза медленнее камеры
+star_scroll_speed = 0.2  # Звезды двигаются в 0.1 раза медленнее камеры
+
 
 def draw_background(screen, camera, background_image, scroll_speed):
     image_width, image_height = background_image.get_size()
@@ -237,6 +247,10 @@ def draw_background(screen, camera, background_image, scroll_speed):
     for x in range(-image_width, CAMERA_WIDTH + image_width, image_width):
         for y in range(-image_height, CAMERA_HEIGHT + image_height, image_height):
             screen.blit(background_image, (x + scroll_x, y + scroll_y))
+
+
+def distance(x1, x2, y1, y2): # функция проверки дистанции до объекта
+    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
 # Главный игровой цикл
@@ -256,8 +270,7 @@ while True:
     # Рисуем звезды
     draw_background(screen, camera, stars_image, star_scroll_speed)
 
-
-# Отображение пояса астероидов
+    # Отображение пояса астероидов
     if current_room == (101, 101):
         asteroid_belt.update_and_draw(screen, camera)
 
@@ -268,9 +281,15 @@ while True:
     if current_room == (100, 100):
         asteroid_field.update_and_draw(screen, camera)
 
-
+        # Проверка расстояния до астероидов "ast_mod01_s16"
+    for asteroid in asteroid_field.asteroids:
+        if asteroid.sprite == "ast_mod01_s16":
+            dist = distance(ship_x, asteroid.x, ship_y, asteroid.y)
+            if dist < 100:  # Пример: если расстояние меньше 100 пикселей
+                #pygame.draw.line(screen, color='Blue', (ship_x, ship_y), (asteroid.x, asteroid.y), width=1)
+                print(f"Опасность! Расстояние до астероида: {dist}")
     draw_ship()
-    draw_background(screen, camera, fog_image, fog_scroll_speed) # туман по верх всех объектов в сцене
+    draw_background(screen, camera, fog_image, fog_scroll_speed)  # туман по верх всех объектов в сцене
 
     font = pygame.font.SysFont(None, 36)
     room_text = font.render(f"Room: {current_room[0]}x{current_room[1]}", True, WHITE)
