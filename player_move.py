@@ -53,6 +53,10 @@ animation_index = 0
 animation_timer = 0
 animation_speed = 100  # Скорость анимации в миллисекундах
 
+# Параметры распрделения по гаусу
+mu_x, mu_y = 2000, 2000 # среднее значение для распределения
+sigma = 300 # стандартное отклонение
+
 # Камера
 camera = pygame.Rect(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT)
 
@@ -127,10 +131,13 @@ class AsteroidField:
     def generate_asteroids(self, asteroid_counts, center_x, center_y, inner_radius, outer_radius):
         for sprite, count in asteroid_counts.items():
             for _ in range(count):
-                angle = random.uniform(0, 2 * math.pi)
-                distance = random.uniform(inner_radius, outer_radius)
-                x = center_x + math.cos(angle) * distance
-                y = center_y + math.sin(angle) * distance
+                # Генерация координат с использованием нормального распределения
+                x = random.gauss(center_x, sigma)
+                y = random.gauss(center_y, sigma)
+
+                # Убедимся, что астероид не выходит за пределы комнаты
+                x = max(0, min(ROOM_WIDTH, x))
+                y = max(0, min(ROOM_HEIGHT, y))
                 rotation_speed = random.uniform(-0.05, 0.05)
 
                 if not any(math.hypot(x - a.x, y - a.y) < 64 for a in self.asteroids):
@@ -281,19 +288,21 @@ while True:
     if current_room == (100, 100):
         asteroid_field.update_and_draw(screen, camera)
 
-        # Проверка расстояния до астероидов "ast_mod01_s16"
-    for asteroid in asteroid_field.asteroids:
-        if asteroid.sprite == "ast_mod01_s16":
-            dist = distance(ship_x, asteroid.x, ship_y, asteroid.y)
-            if dist < 100:  # Пример: если расстояние меньше 100 пикселей
-                #pygame.draw.line(screen, color='Blue', (ship_x, ship_y), (asteroid.x, asteroid.y), width=1)
-                print(f"Опасность! Расстояние до астероида: {dist}")
+
     draw_ship()
     draw_background(screen, camera, fog_image, fog_scroll_speed)  # туман по верх всех объектов в сцене
 
     font = pygame.font.SysFont(None, 36)
     room_text = font.render(f"Room: {current_room[0]}x{current_room[1]}", True, WHITE)
     screen.blit(room_text, (10, 10))
+
+    # Проверка расстояния до астероидов "ast_mod01_s16"
+    for asteroid in asteroid_field.asteroids:
+        if asteroid.sprite == "ast_mod01_s16":
+            dist = distance(ship_x, asteroid.x, ship_y, asteroid.y)
+            if dist < 100:  # Пример: если расстояние меньше 100 пикселей
+                pygame.draw.line(screen, (0,0,255), (ship_x-camera.left, ship_y-camera.top), (asteroid.x-camera.left, asteroid.y-camera.top), 1)
+                print(f"Опасность! Расстояние до астероида: {dist}, {(ship_x, ship_y)},==== {(asteroid.x, asteroid.y)}" )
 
     pygame.display.flip()
     pygame.time.Clock().tick(60)
